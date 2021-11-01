@@ -1,5 +1,8 @@
 ﻿using RabbitMQ.Client;
+using RabbitMQ.Messages;
+using System;
 using System.Text;
+using System.Text.Json;
 
 namespace RabbitMQ.Console.Publisher
 {
@@ -11,9 +14,11 @@ namespace RabbitMQ.Console.Publisher
             do
             {
                 System.Console.Clear();
-                System.Console.WriteLine(" - Welcome to the RabbitMQ Publisher! - Exit [X] - ");
+                System.Console.WriteLine(" - Welcome to the RabbitMQ Publisher! - Exit [X] - \n");
 
-                System.Console.WriteLine("\n\n  [01] - Send message to 'Message queue...'");
+                System.Console.WriteLine("  [01] - Send message to 'Message queue...'");
+                System.Console.WriteLine("  [10] - Send message to 'Message queue... x10'");
+                System.Console.WriteLine("  [10] - Send message to 'Message queue... x1000'");
                 System.Console.WriteLine();
                 op = System.Console.ReadLine();
 
@@ -21,16 +26,54 @@ namespace RabbitMQ.Console.Publisher
                 {
                     case "01":
                         {
-                            System.Console.WriteLine("Option one!");
+                            System.Console.Write("Message: ");
+                            var message = System.Console.ReadLine();
+                            System.Console.Write("Criteria: ");
+                            var criteria = System.Console.ReadLine();
+                            System.Console.Write("Delay: ");
+                            var delay = Convert.ToInt32(System.Console.ReadLine());
 
-                            SendMessageOne();
+                            SendMessageOne(message, criteria, delay);
+
+                            System.Console.ReadLine();
+                        }
+                        break;
+                    case "10":
+                        {
+                            System.Console.Write("Message: ");
+                            var message = System.Console.ReadLine();
+                            System.Console.Write("Criteria: ");
+                            var criteria = System.Console.ReadLine();
+                            System.Console.Write("Delay: ");
+                            var delay = Convert.ToInt32(System.Console.ReadLine());
+
+                            for (int i = 0; i < 10; i++)
+                            {
+                                SendMessageOne(message, criteria, delay * i);
+                            }
+
+                            System.Console.ReadLine();
+                        }
+                        break;
+                    case "1000":
+                        {
+                            System.Console.Write("Message: ");
+                            var message = System.Console.ReadLine();
+                            System.Console.Write("Criteria: ");
+                            var criteria = System.Console.ReadLine();
+                            System.Console.Write("Delay: ");
+                            var delay = Convert.ToInt32(System.Console.ReadLine());
+
+                            for (int i = 0; i < 1000; i++)
+                            {
+                                SendMessageOne(message, criteria, delay);
+                            }
 
                             System.Console.ReadLine();
                         }
                         break;
                     default:
                         {
-
 
                         }
                         break;
@@ -40,15 +83,15 @@ namespace RabbitMQ.Console.Publisher
             System.Console.ReadLine();
         }
 
-        private static void SendMessageOne()
+        private static void SendMessageOne(string message, string criteria, int delay)
         {
             var factory = new ConnectionFactory()
             {
                 //VirtualHost = "",
-                HostName = "hornet",
-                Port = 1883,
-                UserName = "tvudjnyz:tvudjnyz",
-                Password = "Qvhh8Gv8qs6BHOGq1EQgO0SPah4d-Ywd",
+                HostName = "localhost",
+                Port = 5672,
+                UserName = "guest",
+                Password = "guest",
             };
 
             using (var connection = factory.CreateConnection())
@@ -57,14 +100,15 @@ namespace RabbitMQ.Console.Publisher
                 {
                     channel.QueueDeclare(
                         queue: "hello",
-                        durable: false,
+                        durable: true,
                         exclusive: false,
                         autoDelete: false,
                         arguments: null
                     );
 
-                    string message = "Hello World! MessageOne";
-                    var body = Encoding.UTF8.GetBytes(message);
+                    var helloMessage = new HelloMessage { EventDate = DateTime.Now, Message = message, Criteria = criteria, DelaySeconds = delay };
+                                        
+                    var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(helloMessage));
 
                     channel.BasicPublish(exchange: "",
                                          routingKey: "hello",

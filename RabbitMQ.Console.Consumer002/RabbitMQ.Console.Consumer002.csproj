@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\RabbitMQ.Messages\RabbitMQ.Messages.csproj" />
+    <ProjectReference Include="..\RabbitMQ.Messages\RabbitMQ.Messages.csproj" />
   </ItemGroup>
 
 </Project>
